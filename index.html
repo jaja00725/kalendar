@@ -28,7 +28,6 @@
       --external-border: #f59e0b;
 
       --danger: #ef4444;
-      --success: #16a34a;
     }
 
     * {
@@ -48,10 +47,61 @@
       overscroll-behavior: none;
     }
 
+    .lock-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: linear-gradient(135deg, #eff6ff, #f8fafc);
+    }
+
+    .lock-card {
+      width: 100%;
+      max-width: 360px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+    }
+
+    .lock-card h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      text-align: center;
+    }
+
+    .lock-card p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .lock-error {
+      display: none;
+      margin-top: 10px;
+      color: var(--danger);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .lock-error.active {
+      display: block;
+    }
+
     .app {
       display: grid;
-      grid-template-columns: 320px 1fr;
+      grid-template-columns: 340px 1fr;
       min-height: 100vh;
+    }
+
+    .app.locked {
+      display: none;
     }
 
     aside {
@@ -165,7 +215,7 @@
 
     .task {
       position: relative;
-      padding: 10px 40px 10px 10px;
+      padding: 10px 40px 12px 10px;
       border-radius: 10px;
       border: 1px solid var(--border);
       cursor: grab;
@@ -192,6 +242,7 @@
 
     .task small {
       color: var(--muted);
+      line-height: 1.4;
     }
 
     .task.jirka {
@@ -212,6 +263,28 @@
     .task.external {
       background: var(--external);
       border-left: 5px solid var(--external-border);
+    }
+
+    .task-edit-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .task-edit-row label {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .task-edit-row input,
+    .task-edit-row select {
+      margin-top: 4px;
+      min-height: 36px;
+      padding: 7px;
+      font-size: 14px;
+      border-radius: 8px;
     }
 
     .delete-task-btn {
@@ -424,6 +497,10 @@
         display: block;
       }
 
+      .app.locked {
+        display: none;
+      }
+
       aside {
         border-right: none;
         border-bottom: 1px solid var(--border);
@@ -481,10 +558,6 @@
       .task {
         cursor: pointer;
       }
-
-      .hint {
-        font-size: 13px;
-      }
     }
 
     @media (max-width: 520px) {
@@ -514,12 +587,34 @@
         top: 0;
         z-index: 10;
       }
+
+      .task-edit-row {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="app">
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-card">
+      <h1>Kalendář je uzamčený</h1>
+      <p>Zadej heslo pro otevření plánovacího kalendáře.</p>
+
+      <div class="form-group">
+        <label for="passwordInput">Heslo</label>
+        <input id="passwordInput" type="password" inputmode="numeric" placeholder="Zadej heslo" />
+      </div>
+
+      <button id="unlockBtn">Odemknout</button>
+
+      <div class="lock-error" id="lockError">
+        Nesprávné heslo.
+      </div>
+    </div>
+  </div>
+
+  <div class="app locked" id="app">
     <aside>
       <h2>Úkoly</h2>
 
@@ -595,6 +690,14 @@
   </div>
 
   <script>
+    const PASSWORD = "8791";
+
+    const lockScreen = document.getElementById("lockScreen");
+    const app = document.getElementById("app");
+    const passwordInput = document.getElementById("passwordInput");
+    const unlockBtn = document.getElementById("unlockBtn");
+    const lockError = document.getElementById("lockError");
+
     const monthTitle = document.getElementById("monthTitle");
     const calendar = document.getElementById("calendar");
     const taskList = document.getElementById("taskList");
@@ -614,7 +717,6 @@
 
     let currentYear = START_YEAR;
     let currentMonth = START_MONTH;
-
     let selectedTaskId = null;
 
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
@@ -628,6 +730,39 @@
       both: "Jirka + Martin",
       external: "Externí osoba"
     };
+
+    function unlockApp() {
+      const enteredPassword = passwordInput.value.trim();
+
+      if (enteredPassword === PASSWORD) {
+        sessionStorage.setItem("calendarUnlocked", "true");
+        lockScreen.style.display = "none";
+        app.classList.remove("locked");
+        passwordInput.value = "";
+        lockError.classList.remove("active");
+        renderTaskList();
+        renderCalendar();
+      } else {
+        lockError.classList.add("active");
+        passwordInput.value = "";
+        passwordInput.focus();
+      }
+    }
+
+    unlockBtn.addEventListener("click", unlockApp);
+
+    passwordInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        unlockApp();
+      }
+    });
+
+    if (sessionStorage.getItem("calendarUnlocked") === "true") {
+      lockScreen.style.display = "none";
+      app.classList.remove("locked");
+    } else {
+      setTimeout(() => passwordInput.focus(), 100);
+    }
 
     function saveData() {
       localStorage.setItem("tasks", JSON.stringify(tasks));
@@ -662,6 +797,10 @@
       return day === 0 ? 6 : day - 1;
     }
 
+    function getUsedCount(taskId) {
+      return calendarItems.filter(item => item.sourceTaskId === taskId).length;
+    }
+
     function updateSelectedInfo() {
       const selectedTask = tasks.find(task => task.id === selectedTaskId);
 
@@ -690,6 +829,10 @@
       }
 
       tasks.forEach(task => {
+        const usedCount = getUsedCount(task.id);
+
+        task.remaining = Math.max(0, task.amount - usedCount);
+
         const taskEl = document.createElement("div");
         taskEl.className = `task ${task.person}`;
         taskEl.draggable = task.remaining > 0;
@@ -700,14 +843,41 @@
         }
 
         if (task.remaining <= 0) {
-          taskEl.style.opacity = "0.45";
+          taskEl.style.opacity = "0.65";
           taskEl.style.cursor = "not-allowed";
         }
 
         taskEl.innerHTML = `
           <button class="delete-task-btn" title="Smazat akci" type="button">×</button>
+
           <strong>${escapeHtml(task.name)}</strong>
-          <small>${personLabels[task.person]} · zbývá ${task.remaining}/${task.amount}</small>
+
+          <small>
+            ${personLabels[task.person]} · použito ${usedCount}/${task.amount} · zbývá ${task.remaining}
+          </small>
+
+          <div class="task-edit-row">
+            <label>
+              Dotace
+              <input
+                class="task-amount-edit"
+                type="number"
+                min="${usedCount}"
+                value="${task.amount}"
+                title="Dotace nemůže být nižší než počet už vložených dnů"
+              />
+            </label>
+
+            <label>
+              Kdo
+              <select class="task-person-edit">
+                <option value="jirka" ${task.person === "jirka" ? "selected" : ""}>Jirka</option>
+                <option value="martin" ${task.person === "martin" ? "selected" : ""}>Martin</option>
+                <option value="both" ${task.person === "both" ? "selected" : ""}>Jirka + Martin</option>
+                <option value="external" ${task.person === "external" ? "selected" : ""}>Externí osoba</option>
+              </select>
+            </label>
+          </div>
         `;
 
         taskEl.addEventListener("dragstart", event => {
@@ -720,7 +890,11 @@
         });
 
         taskEl.addEventListener("click", event => {
-          if (event.target.classList.contains("delete-task-btn")) {
+          if (
+            event.target.classList.contains("delete-task-btn") ||
+            event.target.classList.contains("task-amount-edit") ||
+            event.target.classList.contains("task-person-edit")
+          ) {
             return;
           }
 
@@ -734,10 +908,33 @@
           deleteTask(task.id);
         });
 
+        const amountInput = taskEl.querySelector(".task-amount-edit");
+
+        amountInput.addEventListener("click", event => {
+          event.stopPropagation();
+        });
+
+        amountInput.addEventListener("change", event => {
+          event.stopPropagation();
+          updateTaskAmount(task.id, Number(event.target.value));
+        });
+
+        const personSelect = taskEl.querySelector(".task-person-edit");
+
+        personSelect.addEventListener("click", event => {
+          event.stopPropagation();
+        });
+
+        personSelect.addEventListener("change", event => {
+          event.stopPropagation();
+          updateTaskPerson(task.id, event.target.value);
+        });
+
         taskList.appendChild(taskEl);
       });
 
       updateSelectedInfo();
+      saveData();
     }
 
     function renderCalendar() {
@@ -904,6 +1101,61 @@
       renderCalendar();
     }
 
+    function updateTaskAmount(taskId, newAmount) {
+      const task = tasks.find(item => item.id === taskId);
+
+      if (!task) {
+        return;
+      }
+
+      const usedCount = getUsedCount(taskId);
+
+      if (!newAmount || newAmount < usedCount) {
+        alert(
+          `Dotace nemůže být nižší než počet už vložených dnů.\nTento úkol je už v kalendáři použitý ${usedCount}×.`
+        );
+
+        renderTaskList();
+        return;
+      }
+
+      task.amount = newAmount;
+      task.remaining = Math.max(0, newAmount - usedCount);
+
+      if (task.remaining <= 0 && selectedTaskId === task.id) {
+        selectedTaskId = null;
+      }
+
+      saveData();
+      renderTaskList();
+      renderCalendar();
+    }
+
+    function updateTaskPerson(taskId, newPerson) {
+      const task = tasks.find(item => item.id === taskId);
+
+      if (!task) {
+        return;
+      }
+
+      task.person = newPerson;
+
+      calendarItems = calendarItems.map(item => {
+        if (item.sourceTaskId === taskId) {
+          return {
+            ...item,
+            person: newPerson
+          };
+        }
+
+        return item;
+      });
+
+      saveData();
+      renderTaskList();
+      renderCalendar();
+    }
+
     function assignTaskToDay(taskId, dateKey) {
       const task = tasks.find(item => item.id === taskId);
 
@@ -920,7 +1172,9 @@
       };
 
       calendarItems.push(calendarItem);
-      task.remaining -= 1;
+
+      const usedCount = getUsedCount(task.id);
+      task.remaining = Math.max(0, task.amount - usedCount);
 
       if (task.remaining <= 0 && selectedTaskId === task.id) {
         selectedTaskId = null;
@@ -938,13 +1192,14 @@
         return;
       }
 
+      calendarItems = calendarItems.filter(calendarItem => calendarItem.id !== itemId);
+
       const sourceTask = tasks.find(task => task.id === item.sourceTaskId);
 
       if (sourceTask) {
-        sourceTask.remaining += 1;
+        const usedCount = getUsedCount(sourceTask.id);
+        sourceTask.remaining = Math.max(0, sourceTask.amount - usedCount);
       }
-
-      calendarItems = calendarItems.filter(calendarItem => calendarItem.id !== itemId);
 
       saveData();
       renderTaskList();
@@ -999,7 +1254,7 @@
     }
 
     function escapeHtml(value) {
-      return value
+      return String(value)
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
