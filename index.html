@@ -309,6 +309,20 @@
       color: white;
     }
 
+    .side-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 22px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    .side-legend h3 {
+      margin-bottom: 4px;
+    }
+
     .calendar-header {
       display: flex;
       align-items: center;
@@ -337,6 +351,8 @@
       flex-wrap: wrap;
       gap: 10px;
       align-items: center;
+      justify-content: center;
+      text-align: center;
       margin-bottom: 12px;
       padding: 10px;
       background: var(--panel);
@@ -349,6 +365,7 @@
     .legend-item {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
       white-space: nowrap;
     }
@@ -565,6 +582,7 @@
         font-size: 13px;
         gap: 8px;
         padding: 8px;
+        justify-content: center;
       }
 
       .calendar {
@@ -676,6 +694,30 @@
       <div class="selected-info" id="selectedInfo"></div>
 
       <div class="task-list" id="taskList"></div>
+
+      <div class="side-legend">
+        <h3>Legenda</h3>
+
+        <div class="legend-item">
+          <div class="legend-color jirka"></div>
+          <span>Jirka</span>
+        </div>
+
+        <div class="legend-item">
+          <div class="legend-color martin"></div>
+          <span>Martin</span>
+        </div>
+
+        <div class="legend-item">
+          <div class="legend-color both"></div>
+          <span>Jirka + Martin</span>
+        </div>
+
+        <div class="legend-item">
+          <div class="legend-color external"></div>
+          <span>Externí osoba</span>
+        </div>
+      </div>
 
       <button class="danger-btn" id="clearBtn">Vymazat všechna data</button>
     </aside>
