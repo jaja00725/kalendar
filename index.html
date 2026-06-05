@@ -14,12 +14,19 @@
       --muted: #6b7280;
       --primary: #2563eb;
       --primary-dark: #1d4ed8;
-      --person1: #dbeafe;
-      --person1-border: #3b82f6;
-      --person2: #fce7f3;
-      --person2-border: #ec4899;
+
+      --jirka: #dbeafe;
+      --jirka-border: #3b82f6;
+
+      --martin: #fce7f3;
+      --martin-border: #ec4899;
+
       --both: #dcfce7;
       --both-border: #22c55e;
+
+      --external: #fef3c7;
+      --external-border: #f59e0b;
+
       --danger: #ef4444;
     }
 
@@ -115,7 +122,8 @@
     }
 
     .task {
-      padding: 10px;
+      position: relative;
+      padding: 10px 34px 10px 10px;
       border-radius: 8px;
       border: 1px solid var(--border);
       cursor: grab;
@@ -131,25 +139,52 @@
     .task strong {
       display: block;
       margin-bottom: 4px;
+      padding-right: 8px;
     }
 
     .task small {
       color: var(--muted);
     }
 
-    .task.person1 {
-      background: var(--person1);
-      border-left: 5px solid var(--person1-border);
+    .task.jirka {
+      background: var(--jirka);
+      border-left: 5px solid var(--jirka-border);
     }
 
-    .task.person2 {
-      background: var(--person2);
-      border-left: 5px solid var(--person2-border);
+    .task.martin {
+      background: var(--martin);
+      border-left: 5px solid var(--martin-border);
     }
 
     .task.both {
       background: var(--both);
       border-left: 5px solid var(--both-border);
+    }
+
+    .task.external {
+      background: var(--external);
+      border-left: 5px solid var(--external-border);
+    }
+
+    .delete-task-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      font-size: 15px;
+      line-height: 1;
+      font-weight: bold;
+    }
+
+    .delete-task-btn:hover {
+      background: var(--danger);
+      color: white;
     }
 
     .calendar-header {
@@ -165,13 +200,7 @@
       text-transform: capitalize;
     }
 
-    .calendar-nav {
-      display: flex;
-      gap: 10px;
-      width: auto;
-    }
-
-    .calendar-nav button {
+    .calendar-header button {
       width: auto;
       min-width: 130px;
     }
@@ -233,21 +262,21 @@
     }
 
     .calendar-task {
-      padding: 7px;
+      padding: 7px 24px 7px 7px;
       border-radius: 6px;
       font-size: 13px;
       position: relative;
       word-break: break-word;
     }
 
-    .calendar-task.person1 {
-      background: var(--person1);
-      border-left: 4px solid var(--person1-border);
+    .calendar-task.jirka {
+      background: var(--jirka);
+      border-left: 4px solid var(--jirka-border);
     }
 
-    .calendar-task.person2 {
-      background: var(--person2);
-      border-left: 4px solid var(--person2-border);
+    .calendar-task.martin {
+      background: var(--martin);
+      border-left: 4px solid var(--martin-border);
     }
 
     .calendar-task.both {
@@ -255,17 +284,30 @@
       border-left: 4px solid var(--both-border);
     }
 
+    .calendar-task.external {
+      background: var(--external);
+      border-left: 4px solid var(--external-border);
+    }
+
     .calendar-task button {
       position: absolute;
       top: 3px;
       right: 3px;
-      width: auto;
-      padding: 1px 5px;
-      font-size: 11px;
-      background: transparent;
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.75);
       color: var(--danger);
-      border: none;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 50%;
       font-weight: bold;
+      line-height: 1;
+    }
+
+    .calendar-task button:hover {
+      background: var(--danger);
+      color: white;
     }
 
     .legend {
@@ -289,19 +331,24 @@
       border: 1px solid var(--border);
     }
 
-    .legend-color.person1 {
-      background: var(--person1);
-      border-left: 5px solid var(--person1-border);
+    .legend-color.jirka {
+      background: var(--jirka);
+      border-left: 5px solid var(--jirka-border);
     }
 
-    .legend-color.person2 {
-      background: var(--person2);
-      border-left: 5px solid var(--person2-border);
+    .legend-color.martin {
+      background: var(--martin);
+      border-left: 5px solid var(--martin-border);
     }
 
     .legend-color.both {
       background: var(--both);
       border-left: 5px solid var(--both-border);
+    }
+
+    .legend-color.external {
+      background: var(--external);
+      border-left: 5px solid var(--external-border);
     }
 
     .hint {
@@ -337,9 +384,10 @@
       <div class="form-group">
         <label for="taskPerson">Pro koho</label>
         <select id="taskPerson">
-          <option value="person1">Osoba 1</option>
-          <option value="person2">Osoba 2</option>
-          <option value="both">Oba společně</option>
+          <option value="jirka">Jirka</option>
+          <option value="martin">Martin</option>
+          <option value="both">Jirka + Martin</option>
+          <option value="external">Externí osoba</option>
         </select>
       </div>
 
@@ -359,17 +407,25 @@
 
       <div class="legend">
         <h3>Legenda</h3>
+
         <div class="legend-item">
-          <div class="legend-color person1"></div>
-          <span>Osoba 1</span>
+          <div class="legend-color jirka"></div>
+          <span>Jirka</span>
         </div>
+
         <div class="legend-item">
-          <div class="legend-color person2"></div>
-          <span>Osoba 2</span>
+          <div class="legend-color martin"></div>
+          <span>Martin</span>
         </div>
+
         <div class="legend-item">
           <div class="legend-color both"></div>
-          <span>Oba společně</span>
+          <span>Jirka + Martin</span>
+        </div>
+
+        <div class="legend-item">
+          <div class="legend-color external"></div>
+          <span>Externí osoba</span>
         </div>
       </div>
 
@@ -402,7 +458,7 @@
     const clearBtn = document.getElementById("clearBtn");
 
     const START_YEAR = 2026;
-    const START_MONTH = 5; // červen, protože JS počítá měsíce od 0
+    const START_MONTH = 5; // červen, protože JavaScript počítá měsíce od 0
 
     let currentYear = START_YEAR;
     let currentMonth = START_MONTH;
@@ -413,9 +469,10 @@
     const weekdays = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
 
     const personLabels = {
-      person1: "Osoba 1",
-      person2: "Osoba 2",
-      both: "Oba společně"
+      jirka: "Jirka",
+      martin: "Martin",
+      both: "Jirka + Martin",
+      external: "Externí osoba"
     };
 
     function saveData() {
@@ -471,6 +528,7 @@
         }
 
         taskEl.innerHTML = `
+          <button class="delete-task-btn" title="Smazat akci" type="button">×</button>
           <strong>${escapeHtml(task.name)}</strong>
           <small>${personLabels[task.person]} · zbývá ${task.remaining}/${task.amount}</small>
         `;
@@ -482,6 +540,14 @@
           }
 
           event.dataTransfer.setData("text/plain", task.id);
+        });
+
+        const deleteBtn = taskEl.querySelector(".delete-task-btn");
+
+        deleteBtn.addEventListener("click", event => {
+          event.stopPropagation();
+
+          deleteTask(task.id);
         });
 
         taskList.appendChild(taskEl);
@@ -548,8 +614,14 @@
           itemEl.className = `calendar-task ${item.person}`;
           itemEl.innerHTML = `
             ${escapeHtml(item.name)}
-            <button title="Odebrat" onclick="removeCalendarItem('${item.id}')">×</button>
+            <button title="Odebrat z kalendáře" type="button">×</button>
           `;
+
+          const deleteCalendarBtn = itemEl.querySelector("button");
+
+          deleteCalendarBtn.addEventListener("click", () => {
+            removeCalendarItem(item.id);
+          });
 
           dayTasksContainer.appendChild(itemEl);
         });
@@ -585,10 +657,33 @@
 
       taskNameInput.value = "";
       taskAmountInput.value = "1";
-      taskPersonSelect.value = "person1";
+      taskPersonSelect.value = "jirka";
 
       saveData();
       renderTaskList();
+    }
+
+    function deleteTask(taskId) {
+      const task = tasks.find(item => item.id === taskId);
+
+      if (!task) {
+        return;
+      }
+
+      const confirmed = confirm(
+        `Opravdu chceš smazat akci „${task.name}“?\nSmažou se i její výskyty v kalendáři.`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      tasks = tasks.filter(item => item.id !== taskId);
+      calendarItems = calendarItems.filter(item => item.sourceTaskId !== taskId);
+
+      saveData();
+      renderTaskList();
+      renderCalendar();
     }
 
     function assignTaskToDay(taskId, dateKey) {
