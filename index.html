@@ -314,7 +314,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
     }
 
     .calendar-header h1 {
@@ -327,6 +327,58 @@
     .calendar-header button {
       width: auto;
       min-width: 130px;
+    }
+
+    .calendar-legend {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 10px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+      font-size: 14px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .legend-color {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      flex: 0 0 auto;
+    }
+
+    .legend-color.jirka {
+      background: var(--jirka);
+      border-left: 5px solid var(--jirka-border);
+    }
+
+    .legend-color.martin {
+      background: var(--martin);
+      border-left: 5px solid var(--martin-border);
+    }
+
+    .legend-color.both {
+      background: var(--both);
+      border-left: 5px solid var(--both-border);
+    }
+
+    .legend-color.external {
+      background: var(--external);
+      border-left: 5px solid var(--external-border);
     }
 
     .calendar-wrap {
@@ -463,47 +515,6 @@
       color: white;
     }
 
-    .legend {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-top: 20px;
-      font-size: 14px;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .legend-color {
-      width: 18px;
-      height: 18px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-    }
-
-    .legend-color.jirka {
-      background: var(--jirka);
-      border-left: 5px solid var(--jirka-border);
-    }
-
-    .legend-color.martin {
-      background: var(--martin);
-      border-left: 5px solid var(--martin-border);
-    }
-
-    .legend-color.both {
-      background: var(--both);
-      border-left: 5px solid var(--both-border);
-    }
-
-    .legend-color.external {
-      background: var(--external);
-      border-left: 5px solid var(--external-border);
-    }
-
     @media (max-width: 900px) {
       .app {
         display: block;
@@ -524,9 +535,6 @@
       }
 
       .calendar-header {
-        position: sticky;
-        top: 0;
-        z-index: 5;
         background: var(--bg);
         padding: 8px 0;
       }
@@ -550,6 +558,13 @@
       #nextMonthBtn::before {
         content: "→";
         font-size: 20px;
+      }
+
+      .calendar-legend {
+        top: 0;
+        font-size: 13px;
+        gap: 8px;
+        padding: 8px;
       }
 
       .calendar {
@@ -662,9 +677,17 @@
 
       <div class="task-list" id="taskList"></div>
 
-      <div class="legend">
-        <h3>Legenda</h3>
+      <button class="danger-btn" id="clearBtn">Vymazat všechna data</button>
+    </aside>
 
+    <main>
+      <div class="calendar-header">
+        <button class="secondary-btn" id="prevMonthBtn">← Předchozí</button>
+        <h1 id="monthTitle"></h1>
+        <button class="secondary-btn" id="nextMonthBtn">Další →</button>
+      </div>
+
+      <div class="calendar-legend">
         <div class="legend-item">
           <div class="legend-color jirka"></div>
           <span>Jirka</span>
@@ -684,16 +707,6 @@
           <div class="legend-color external"></div>
           <span>Externí osoba</span>
         </div>
-      </div>
-
-      <button class="danger-btn" id="clearBtn">Vymazat všechna data</button>
-    </aside>
-
-    <main>
-      <div class="calendar-header">
-        <button class="secondary-btn" id="prevMonthBtn">← Předchozí</button>
-        <h1 id="monthTitle"></h1>
-        <button class="secondary-btn" id="nextMonthBtn">Další →</button>
       </div>
 
       <div class="calendar-wrap">
@@ -726,7 +739,7 @@
     const clearBtn = document.getElementById("clearBtn");
 
     const START_YEAR = 2026;
-    const START_MONTH = 5; // červen, protože JS počítá měsíce od 0
+    const START_MONTH = 5;
 
     let currentYear = START_YEAR;
     let currentMonth = START_MONTH;
