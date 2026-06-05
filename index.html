@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Plánovací kalendář</title>
 
   <style>
@@ -28,10 +28,16 @@
       --external-border: #f59e0b;
 
       --danger: #ef4444;
+      --success: #16a34a;
     }
 
     * {
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
     }
 
     body {
@@ -39,6 +45,7 @@
       font-family: Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
+      overscroll-behavior: none;
     }
 
     .app {
@@ -76,10 +83,17 @@
 
     input, select, button {
       width: 100%;
+      min-height: 44px;
       padding: 10px;
       border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 14px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    input, select {
+      background: white;
+      color: var(--text);
     }
 
     button {
@@ -88,7 +102,12 @@
       background: var(--primary);
       color: white;
       font-weight: bold;
-      transition: background 0.2s;
+      transition: background 0.2s, transform 0.1s;
+      touch-action: manipulation;
+    }
+
+    button:active {
+      transform: scale(0.98);
     }
 
     button:hover {
@@ -114,6 +133,29 @@
       background: #dc2626;
     }
 
+    .hint {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+      margin-top: 12px;
+    }
+
+    .selected-info {
+      display: none;
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 10px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e3a8a;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .selected-info.active {
+      display: block;
+    }
+
     .task-list {
       margin-top: 20px;
       display: flex;
@@ -123,17 +165,23 @@
 
     .task {
       position: relative;
-      padding: 10px 34px 10px 10px;
-      border-radius: 8px;
+      padding: 10px 40px 10px 10px;
+      border-radius: 10px;
       border: 1px solid var(--border);
       cursor: grab;
       background: white;
       font-size: 14px;
       user-select: none;
+      touch-action: manipulation;
     }
 
     .task:active {
       cursor: grabbing;
+    }
+
+    .task.selected {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
     }
 
     .task strong {
@@ -168,16 +216,17 @@
 
     .delete-task-btn {
       position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 22px;
-      height: 22px;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      min-height: 28px;
       padding: 0;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.9);
       color: var(--danger);
       border: 1px solid rgba(239, 68, 68, 0.35);
-      font-size: 15px;
+      font-size: 17px;
       line-height: 1;
       font-weight: bold;
     }
@@ -191,18 +240,27 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 15px;
+      gap: 12px;
       margin-bottom: 20px;
     }
 
     .calendar-header h1 {
       margin: 0;
       text-transform: capitalize;
+      text-align: center;
+      font-size: 28px;
     }
 
     .calendar-header button {
       width: auto;
       min-width: 130px;
+    }
+
+    .calendar-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 12px;
     }
 
     .calendar {
@@ -229,6 +287,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+      touch-action: manipulation;
     }
 
     .day.empty {
@@ -238,6 +297,14 @@
     .day.over {
       outline: 3px dashed var(--primary);
       outline-offset: -6px;
+    }
+
+    .day.can-place {
+      cursor: pointer;
+    }
+
+    .day.can-place:active {
+      background: #eff6ff;
     }
 
     .day-header {
@@ -262,8 +329,8 @@
     }
 
     .calendar-task {
-      padding: 7px 24px 7px 7px;
-      border-radius: 6px;
+      padding: 7px 28px 7px 7px;
+      border-radius: 7px;
       font-size: 13px;
       position: relative;
       word-break: break-word;
@@ -291,13 +358,14 @@
 
     .calendar-task button {
       position: absolute;
-      top: 3px;
-      right: 3px;
-      width: 18px;
-      height: 18px;
+      top: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      min-height: 22px;
       padding: 0;
-      font-size: 12px;
-      background: rgba(255, 255, 255, 0.75);
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.8);
       color: var(--danger);
       border: 1px solid rgba(239, 68, 68, 0.25);
       border-radius: 50%;
@@ -351,21 +419,100 @@
       border-left: 5px solid var(--external-border);
     }
 
-    .hint {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.4;
-      margin-top: 12px;
-    }
-
     @media (max-width: 900px) {
       .app {
-        grid-template-columns: 1fr;
+        display: block;
       }
 
       aside {
         border-right: none;
         border-bottom: 1px solid var(--border);
+        padding: 16px;
+      }
+
+      main {
+        padding: 16px;
+      }
+
+      .calendar-header {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: var(--bg);
+        padding: 8px 0;
+      }
+
+      .calendar-header h1 {
+        font-size: 20px;
+      }
+
+      .calendar-header button {
+        min-width: 48px;
+        width: 48px;
+        padding: 8px;
+        font-size: 0;
+      }
+
+      #prevMonthBtn::before {
+        content: "←";
+        font-size: 20px;
+      }
+
+      #nextMonthBtn::before {
+        content: "→";
+        font-size: 20px;
+      }
+
+      .calendar {
+        grid-template-columns: repeat(7, minmax(118px, 1fr));
+        min-width: 826px;
+      }
+
+      .weekday {
+        padding: 10px 6px;
+        font-size: 13px;
+      }
+
+      .day {
+        min-height: 132px;
+        padding: 7px;
+      }
+
+      .task {
+        cursor: pointer;
+      }
+
+      .hint {
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      aside {
+        padding: 14px;
+      }
+
+      main {
+        padding: 12px;
+      }
+
+      .calendar {
+        grid-template-columns: repeat(7, minmax(104px, 1fr));
+        min-width: 728px;
+      }
+
+      .day {
+        min-height: 122px;
+      }
+
+      .calendar-task {
+        font-size: 12px;
+      }
+
+      .selected-info {
+        position: sticky;
+        top: 0;
+        z-index: 10;
       }
     }
   </style>
@@ -399,9 +546,11 @@
       <button id="addTaskBtn">Přidat úkol</button>
 
       <p class="hint">
-        Úkol přetáhni z levého sloupce do konkrétního dne v kalendáři.
-        Časová dotace znamená, kolikrát lze úkol do kalendáře vložit.
+        Na počítači můžeš úkol přetáhnout do kalendáře.
+        Na mobilu klepni na úkol a potom klepni na den.
       </p>
+
+      <div class="selected-info" id="selectedInfo"></div>
 
       <div class="task-list" id="taskList"></div>
 
@@ -439,7 +588,9 @@
         <button class="secondary-btn" id="nextMonthBtn">Další →</button>
       </div>
 
-      <div class="calendar" id="calendar"></div>
+      <div class="calendar-wrap">
+        <div class="calendar" id="calendar"></div>
+      </div>
     </main>
   </div>
 
@@ -447,6 +598,7 @@
     const monthTitle = document.getElementById("monthTitle");
     const calendar = document.getElementById("calendar");
     const taskList = document.getElementById("taskList");
+    const selectedInfo = document.getElementById("selectedInfo");
 
     const taskNameInput = document.getElementById("taskName");
     const taskPersonSelect = document.getElementById("taskPerson");
@@ -458,10 +610,12 @@
     const clearBtn = document.getElementById("clearBtn");
 
     const START_YEAR = 2026;
-    const START_MONTH = 5; // červen, protože JavaScript počítá měsíce od 0
+    const START_MONTH = 5;
 
     let currentYear = START_YEAR;
     let currentMonth = START_MONTH;
+
+    let selectedTaskId = null;
 
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
     let calendarItems = JSON.parse(localStorage.getItem("calendarItems")) || [];
@@ -508,11 +662,30 @@
       return day === 0 ? 6 : day - 1;
     }
 
+    function updateSelectedInfo() {
+      const selectedTask = tasks.find(task => task.id === selectedTaskId);
+
+      if (!selectedTask || selectedTask.remaining <= 0) {
+        selectedTaskId = null;
+        selectedInfo.classList.remove("active");
+        selectedInfo.innerHTML = "";
+        return;
+      }
+
+      selectedInfo.classList.add("active");
+      selectedInfo.innerHTML = `
+        Vybráno: <strong>${escapeHtml(selectedTask.name)}</strong><br>
+        ${personLabels[selectedTask.person]} · zbývá ${selectedTask.remaining}/${selectedTask.amount}<br>
+        Klepni na den v kalendáři.
+      `;
+    }
+
     function renderTaskList() {
       taskList.innerHTML = "";
 
       if (tasks.length === 0) {
         taskList.innerHTML = `<p class="hint">Zatím nejsou přidané žádné úkoly.</p>`;
+        updateSelectedInfo();
         return;
       }
 
@@ -521,6 +694,10 @@
         taskEl.className = `task ${task.person}`;
         taskEl.draggable = task.remaining > 0;
         taskEl.dataset.taskId = task.id;
+
+        if (task.id === selectedTaskId) {
+          taskEl.classList.add("selected");
+        }
 
         if (task.remaining <= 0) {
           taskEl.style.opacity = "0.45";
@@ -542,16 +719,25 @@
           event.dataTransfer.setData("text/plain", task.id);
         });
 
+        taskEl.addEventListener("click", event => {
+          if (event.target.classList.contains("delete-task-btn")) {
+            return;
+          }
+
+          selectTask(task.id);
+        });
+
         const deleteBtn = taskEl.querySelector(".delete-task-btn");
 
         deleteBtn.addEventListener("click", event => {
           event.stopPropagation();
-
           deleteTask(task.id);
         });
 
         taskList.appendChild(taskEl);
       });
+
+      updateSelectedInfo();
     }
 
     function renderCalendar() {
@@ -581,6 +767,10 @@
         dayEl.className = "day";
         dayEl.dataset.date = dateKey;
 
+        if (selectedTaskId) {
+          dayEl.classList.add("can-place");
+        }
+
         dayEl.innerHTML = `
           <div class="day-header">
             <span>${day}</span>
@@ -606,6 +796,16 @@
           assignTaskToDay(taskId, dateKey);
         });
 
+        dayEl.addEventListener("click", event => {
+          if (event.target.closest(".calendar-task")) {
+            return;
+          }
+
+          if (selectedTaskId) {
+            assignTaskToDay(selectedTaskId, dateKey);
+          }
+        });
+
         const dayTasksContainer = dayEl.querySelector(".day-tasks");
         const itemsForDay = calendarItems.filter(item => item.date === dateKey);
 
@@ -619,7 +819,8 @@
 
           const deleteCalendarBtn = itemEl.querySelector("button");
 
-          deleteCalendarBtn.addEventListener("click", () => {
+          deleteCalendarBtn.addEventListener("click", event => {
+            event.stopPropagation();
             removeCalendarItem(item.id);
           });
 
@@ -628,6 +829,19 @@
 
         calendar.appendChild(dayEl);
       }
+    }
+
+    function selectTask(taskId) {
+      const task = tasks.find(item => item.id === taskId);
+
+      if (!task || task.remaining <= 0) {
+        return;
+      }
+
+      selectedTaskId = selectedTaskId === taskId ? null : taskId;
+
+      renderTaskList();
+      renderCalendar();
     }
 
     function addTask() {
@@ -681,6 +895,10 @@
       tasks = tasks.filter(item => item.id !== taskId);
       calendarItems = calendarItems.filter(item => item.sourceTaskId !== taskId);
 
+      if (selectedTaskId === taskId) {
+        selectedTaskId = null;
+      }
+
       saveData();
       renderTaskList();
       renderCalendar();
@@ -703,6 +921,10 @@
 
       calendarItems.push(calendarItem);
       task.remaining -= 1;
+
+      if (task.remaining <= 0 && selectedTaskId === task.id) {
+        selectedTaskId = null;
+      }
 
       saveData();
       renderTaskList();
@@ -769,6 +991,8 @@
 
       tasks = [];
       calendarItems = [];
+      selectedTaskId = null;
+
       saveData();
       renderTaskList();
       renderCalendar();
