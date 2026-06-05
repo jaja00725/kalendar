@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plánovací kalendář</title>
+
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --panel: #ffffff;
+      --border: #d9dde3;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --person1: #dbeafe;
+      --person1-border: #3b82f6;
+      --person2: #fce7f3;
+      --person2-border: #ec4899;
+      --both: #dcfce7;
+      --both-border: #22c55e;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: 100vh;
+    }
+
+    aside {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    main {
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: var(--primary);
+      color: white;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+    }
+
+    .secondary-btn {
+      background: #e5e7eb;
+      color: var(--text);
+    }
+
+    .secondary-btn:hover {
+      background: #d1d5db;
+    }
+
+    .danger-btn {
+      background: var(--danger);
+      color: white;
+      margin-top: 12px;
+    }
+
+    .danger-btn:hover {
+      background: #dc2626;
+    }
+
+    .task-list {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      cursor: grab;
+      background: white;
+      font-size: 14px;
+      user-select: none;
+    }
+
+    .task:active {
+      cursor: grabbing;
+    }
+
+    .task strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .task small {
+      color: var(--muted);
+    }
+
+    .task.person1 {
+      background: var(--person1);
+      border-left: 5px solid var(--person1-border);
+    }
+
+    .task.person2 {
+      background: var(--person2);
+      border-left: 5px solid var(--person2-border);
+    }
+
+    .task.both {
+      background: var(--both);
+      border-left: 5px solid var(--both-border);
+    }
+
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .calendar-header h1 {
+      margin: 0;
+      text-transform: capitalize;
+    }
+
+    .calendar-nav {
+      display: flex;
+      gap: 10px;
+      width: auto;
+    }
+
+    .calendar-nav button {
+      width: auto;
+      min-width: 130px;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(150px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      min-width: 1050px;
+    }
+
+    .weekday {
+      background: #eef2ff;
+      padding: 12px;
+      font-weight: bold;
+      text-align: center;
+      color: #3730a3;
+    }
+
+    .day {
+      background: white;
+      min-height: 160px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .day.empty {
+      background: #f3f4f6;
+    }
+
+    .day.over {
+      outline: 3px dashed var(--primary);
+      outline-offset: -6px;
+    }
+
+    .day-header {
+      font-weight: bold;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .day-header span:last-child {
+      color: var(--muted);
+      font-weight: normal;
+      font-size: 12px;
+    }
+
+    .day-tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .calendar-task {
+      padding: 7px;
+      border-radius: 6px;
+      font-size: 13px;
+      position: relative;
+      word-break: break-word;
+    }
+
+    .calendar-task.person1 {
+      background: var(--person1);
+      border-left: 4px solid var(--person1-border);
+    }
+
+    .calendar-task.person2 {
+      background: var(--person2);
+      border-left: 4px solid var(--person2-border);
+    }
+
+    .calendar-task.both {
+      background: var(--both);
+      border-left: 4px solid var(--both-border);
+    }
+
+    .calendar-task button {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: auto;
+      padding: 1px 5px;
+      font-size: 11px;
+      background: transparent;
+      color: var(--danger);
+      border: none;
+      font-weight: bold;
+    }
+
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-color {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .legend-color.person1 {
+      background: var(--person1);
+      border-left: 5px solid var(--person1-border);
+    }
+
+    .legend-color.person2 {
+      background: var(--person2);
+      border-left: 5px solid var(--person2-border);
+    }
+
+    .legend-color.both {
+      background: var(--both);
+      border-left: 5px solid var(--both-border);
+    }
+
+    .hint {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside>
+      <h2>Úkoly</h2>
+
+      <div class="form-group">
+        <label for="taskName">Název úkolu</label>
+        <input id="taskName" type="text" placeholder="Např. Analýza dat" />
+      </div>
+
+      <div class="form-group">
+        <label for="taskPerson">Pro koho</label>
+        <select id="taskPerson">
+          <option value="person1">Osoba 1</option>
+          <option value="person2">Osoba 2</option>
+          <option value="both">Oba společně</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="taskAmount">Časová dotace / počet dnů</label>
+        <input id="taskAmount" type="number" min="1" value="1" />
+      </div>
+
+      <button id="addTaskBtn">Přidat úkol</button>
+
+      <p class="hint">
+        Úkol přetáhni z levého sloupce do konkrétního dne v kalendáři.
+        Časová dotace znamená, kolikrát lze úkol do kalendáře vložit.
+      </p>
+
+      <div class="task-list" id="taskList"></div>
+
+      <div class="legend">
+        <h3>Legenda</h3>
+        <div class="legend-item">
+          <div class="legend-color person1"></div>
+          <span>Osoba 1</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color person2"></div>
+          <span>Osoba 2</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color both"></div>
+          <span>Oba společně</span>
+        </div>
+      </div>
+
+      <button class="danger-btn" id="clearBtn">Vymazat všechna data</button>
+    </aside>
+
+    <main>
+      <div class="calendar-header">
+        <button class="secondary-btn" id="prevMonthBtn">← Předchozí</button>
+        <h1 id="monthTitle"></h1>
+        <button class="secondary-btn" id="nextMonthBtn">Další →</button>
+      </div>
+
+      <div class="calendar" id="calendar"></div>
+    </main>
+  </div>
+
+  <script>
+    const monthTitle = document.getElementById("monthTitle");
+    const calendar = document.getElementById("calendar");
+    const taskList = document.getElementById("taskList");
+
+    const taskNameInput = document.getElementById("taskName");
+    const taskPersonSelect = document.getElementById("taskPerson");
+    const taskAmountInput = document.getElementById("taskAmount");
+
+    const addTaskBtn = document.getElementById("addTaskBtn");
+    const prevMonthBtn = document.getElementById("prevMonthBtn");
+    const nextMonthBtn = document.getElementById("nextMonthBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    const START_YEAR = 2026;
+    const START_MONTH = 5; // červen, protože JS počítá měsíce od 0
+
+    let currentYear = START_YEAR;
+    let currentMonth = START_MONTH;
+
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    let calendarItems = JSON.parse(localStorage.getItem("calendarItems")) || [];
+
+    const weekdays = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
+
+    const personLabels = {
+      person1: "Osoba 1",
+      person2: "Osoba 2",
+      both: "Oba společně"
+    };
+
+    function saveData() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+      localStorage.setItem("calendarItems", JSON.stringify(calendarItems));
+    }
+
+    function getDateKey(year, month, day) {
+      const m = String(month + 1).padStart(2, "0");
+      const d = String(day).padStart(2, "0");
+      return `${year}-${m}-${d}`;
+    }
+
+    function getCzechMonthName(year, month) {
+      const date = new Date(year, month, 1);
+
+      return date.toLocaleDateString("cs-CZ", {
+        month: "long",
+        year: "numeric"
+      });
+    }
+
+    function getWeekdayName(year, month, day) {
+      const date = new Date(year, month, day);
+
+      return date.toLocaleDateString("cs-CZ", {
+        weekday: "short"
+      });
+    }
+
+    function getMondayBasedDayIndex(date) {
+      const day = date.getDay();
+      return day === 0 ? 6 : day - 1;
+    }
+
+    function renderTaskList() {
+      taskList.innerHTML = "";
+
+      if (tasks.length === 0) {
+        taskList.innerHTML = `<p class="hint">Zatím nejsou přidané žádné úkoly.</p>`;
+        return;
+      }
+
+      tasks.forEach(task => {
+        const taskEl = document.createElement("div");
+        taskEl.className = `task ${task.person}`;
+        taskEl.draggable = task.remaining > 0;
+        taskEl.dataset.taskId = task.id;
+
+        if (task.remaining <= 0) {
+          taskEl.style.opacity = "0.45";
+          taskEl.style.cursor = "not-allowed";
+        }
+
+        taskEl.innerHTML = `
+          <strong>${escapeHtml(task.name)}</strong>
+          <small>${personLabels[task.person]} · zbývá ${task.remaining}/${task.amount}</small>
+        `;
+
+        taskEl.addEventListener("dragstart", event => {
+          if (task.remaining <= 0) {
+            event.preventDefault();
+            return;
+          }
+
+          event.dataTransfer.setData("text/plain", task.id);
+        });
+
+        taskList.appendChild(taskEl);
+      });
+    }
+
+    function renderCalendar() {
+      calendar.innerHTML = "";
+      monthTitle.textContent = getCzechMonthName(currentYear, currentMonth);
+
+      weekdays.forEach(day => {
+        const weekdayEl = document.createElement("div");
+        weekdayEl.className = "weekday";
+        weekdayEl.textContent = day;
+        calendar.appendChild(weekdayEl);
+      });
+
+      const firstDay = new Date(currentYear, currentMonth, 1);
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const firstDayIndex = getMondayBasedDayIndex(firstDay);
+
+      for (let i = 0; i < firstDayIndex; i++) {
+        const emptyEl = document.createElement("div");
+        emptyEl.className = "day empty";
+        calendar.appendChild(emptyEl);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = getDateKey(currentYear, currentMonth, day);
+        const dayEl = document.createElement("div");
+        dayEl.className = "day";
+        dayEl.dataset.date = dateKey;
+
+        dayEl.innerHTML = `
+          <div class="day-header">
+            <span>${day}</span>
+            <span>${getWeekdayName(currentYear, currentMonth, day)}</span>
+          </div>
+          <div class="day-tasks"></div>
+        `;
+
+        dayEl.addEventListener("dragover", event => {
+          event.preventDefault();
+          dayEl.classList.add("over");
+        });
+
+        dayEl.addEventListener("dragleave", () => {
+          dayEl.classList.remove("over");
+        });
+
+        dayEl.addEventListener("drop", event => {
+          event.preventDefault();
+          dayEl.classList.remove("over");
+
+          const taskId = event.dataTransfer.getData("text/plain");
+          assignTaskToDay(taskId, dateKey);
+        });
+
+        const dayTasksContainer = dayEl.querySelector(".day-tasks");
+        const itemsForDay = calendarItems.filter(item => item.date === dateKey);
+
+        itemsForDay.forEach(item => {
+          const itemEl = document.createElement("div");
+          itemEl.className = `calendar-task ${item.person}`;
+          itemEl.innerHTML = `
+            ${escapeHtml(item.name)}
+            <button title="Odebrat" onclick="removeCalendarItem('${item.id}')">×</button>
+          `;
+
+          dayTasksContainer.appendChild(itemEl);
+        });
+
+        calendar.appendChild(dayEl);
+      }
+    }
+
+    function addTask() {
+      const name = taskNameInput.value.trim();
+      const person = taskPersonSelect.value;
+      const amount = Number(taskAmountInput.value);
+
+      if (!name) {
+        alert("Zadej název úkolu.");
+        return;
+      }
+
+      if (!amount || amount < 1) {
+        alert("Časová dotace musí být alespoň 1.");
+        return;
+      }
+
+      const task = {
+        id: crypto.randomUUID(),
+        name,
+        person,
+        amount,
+        remaining: amount
+      };
+
+      tasks.push(task);
+
+      taskNameInput.value = "";
+      taskAmountInput.value = "1";
+      taskPersonSelect.value = "person1";
+
+      saveData();
+      renderTaskList();
+    }
+
+    function assignTaskToDay(taskId, dateKey) {
+      const task = tasks.find(item => item.id === taskId);
+
+      if (!task || task.remaining <= 0) {
+        return;
+      }
+
+      const calendarItem = {
+        id: crypto.randomUUID(),
+        sourceTaskId: task.id,
+        name: task.name,
+        person: task.person,
+        date: dateKey
+      };
+
+      calendarItems.push(calendarItem);
+      task.remaining -= 1;
+
+      saveData();
+      renderTaskList();
+      renderCalendar();
+    }
+
+    function removeCalendarItem(itemId) {
+      const item = calendarItems.find(calendarItem => calendarItem.id === itemId);
+
+      if (!item) {
+        return;
+      }
+
+      const sourceTask = tasks.find(task => task.id === item.sourceTaskId);
+
+      if (sourceTask) {
+        sourceTask.remaining += 1;
+      }
+
+      calendarItems = calendarItems.filter(calendarItem => calendarItem.id !== itemId);
+
+      saveData();
+      renderTaskList();
+      renderCalendar();
+    }
+
+    function goToPreviousMonth() {
+      const isAtStart =
+        currentYear === START_YEAR &&
+        currentMonth === START_MONTH;
+
+      if (isAtStart) {
+        alert("Kalendář začíná v červnu 2026.");
+        return;
+      }
+
+      currentMonth--;
+
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      }
+
+      renderCalendar();
+    }
+
+    function goToNextMonth() {
+      currentMonth++;
+
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+
+      renderCalendar();
+    }
+
+    function clearAllData() {
+      const confirmed = confirm("Opravdu chceš vymazat všechny úkoly i položky v kalendáři?");
+
+      if (!confirmed) {
+        return;
+      }
+
+      tasks = [];
+      calendarItems = [];
+      saveData();
+      renderTaskList();
+      renderCalendar();
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    addTaskBtn.addEventListener("click", addTask);
+    prevMonthBtn.addEventListener("click", goToPreviousMonth);
+    nextMonthBtn.addEventListener("click", goToNextMonth);
+    clearBtn.addEventListener("click", clearAllData);
+
+    taskNameInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        addTask();
+      }
+    });
+
+    renderTaskList();
+    renderCalendar();
+  </script>
+</body>
+</html>
