@@ -116,7 +116,9 @@
       overflow-x: auto;
     }
 
-    h1, h2, h3 {
+    h1,
+    h2,
+    h3 {
       margin-top: 0;
     }
 
@@ -131,7 +133,9 @@
       margin-bottom: 5px;
     }
 
-    input, select, button {
+    input,
+    select,
+    button {
       width: 100%;
       min-height: 44px;
       padding: 10px;
@@ -141,7 +145,8 @@
       font-family: inherit;
     }
 
-    input, select {
+    input,
+    select {
       background: white;
       color: var(--text);
     }
@@ -312,15 +317,18 @@
     .side-legend {
       display: flex;
       flex-direction: column;
+      align-items: flex-start;
       gap: 6px;
       margin-top: 22px;
       padding-top: 14px;
       border-top: 1px solid var(--border);
       font-size: 14px;
+      text-align: left;
     }
 
     .side-legend h3 {
       margin-bottom: 4px;
+      text-align: left;
     }
 
     .calendar-header {
@@ -365,9 +373,16 @@
     .legend-item {
       display: flex;
       align-items: center;
-      justify-content: center;
       gap: 8px;
       white-space: nowrap;
+    }
+
+    .calendar-legend .legend-item {
+      justify-content: center;
+    }
+
+    .side-legend .legend-item {
+      justify-content: flex-start;
     }
 
     .legend-color {
