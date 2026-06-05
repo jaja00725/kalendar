@@ -407,6 +407,18 @@
       font-size: 13px;
       position: relative;
       word-break: break-word;
+      cursor: grab;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .calendar-task:active {
+      cursor: grabbing;
+    }
+
+    .calendar-task.selected-move {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
     }
 
     .calendar-task.jirka {
@@ -643,6 +655,7 @@
       <p class="hint">
         Na počítači můžeš úkol přetáhnout do kalendáře.
         Na mobilu klepni na úkol a potom klepni na den.
+        Položku už vloženou v kalendáři můžeš přesunout přetažením, nebo na mobilu klepnutím a následným klepnutím na nový den.
       </p>
 
       <div class="selected-info" id="selectedInfo"></div>
@@ -713,11 +726,13 @@
     const clearBtn = document.getElementById("clearBtn");
 
     const START_YEAR = 2026;
-    const START_MONTH = 5;
+    const START_MONTH = 5; // červen, protože JS počítá měsíce od 0
 
     let currentYear = START_YEAR;
     let currentMonth = START_MONTH;
+
     let selectedTaskId = null;
+    let selectedCalendarItemId = null;
 
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
     let calendarItems = JSON.parse(localStorage.getItem("calendarItems")) || [];
@@ -803,20 +818,32 @@
 
     function updateSelectedInfo() {
       const selectedTask = tasks.find(task => task.id === selectedTaskId);
+      const selectedCalendarItem = calendarItems.find(item => item.id === selectedCalendarItemId);
 
-      if (!selectedTask || selectedTask.remaining <= 0) {
-        selectedTaskId = null;
-        selectedInfo.classList.remove("active");
-        selectedInfo.innerHTML = "";
+      if (selectedTask && selectedTask.remaining > 0) {
+        selectedInfo.classList.add("active");
+        selectedInfo.innerHTML = `
+          Vybráno k vložení: <strong>${escapeHtml(selectedTask.name)}</strong><br>
+          ${personLabels[selectedTask.person]} · zbývá ${selectedTask.remaining}/${selectedTask.amount}<br>
+          Klepni na den v kalendáři.
+        `;
         return;
       }
 
-      selectedInfo.classList.add("active");
-      selectedInfo.innerHTML = `
-        Vybráno: <strong>${escapeHtml(selectedTask.name)}</strong><br>
-        ${personLabels[selectedTask.person]} · zbývá ${selectedTask.remaining}/${selectedTask.amount}<br>
-        Klepni na den v kalendáři.
-      `;
+      if (selectedCalendarItem) {
+        selectedInfo.classList.add("active");
+        selectedInfo.innerHTML = `
+          Vybráno k přesunu: <strong>${escapeHtml(selectedCalendarItem.name)}</strong><br>
+          ${personLabels[selectedCalendarItem.person]}<br>
+          Klepni na nový den v kalendáři.
+        `;
+        return;
+      }
+
+      selectedTaskId = null;
+      selectedCalendarItemId = null;
+      selectedInfo.classList.remove("active");
+      selectedInfo.innerHTML = "";
     }
 
     function renderTaskList() {
@@ -886,7 +913,7 @@
             return;
           }
 
-          event.dataTransfer.setData("text/plain", task.id);
+          event.dataTransfer.setData("text/plain", `task:${task.id}`);
         });
 
         taskEl.addEventListener("click", event => {
@@ -964,7 +991,7 @@
         dayEl.className = "day";
         dayEl.dataset.date = dateKey;
 
-        if (selectedTaskId) {
+        if (selectedTaskId || selectedCalendarItemId) {
           dayEl.classList.add("can-place");
         }
 
@@ -989,8 +1016,21 @@
           event.preventDefault();
           dayEl.classList.remove("over");
 
-          const taskId = event.dataTransfer.getData("text/plain");
-          assignTaskToDay(taskId, dateKey);
+          const dragData = event.dataTransfer.getData("text/plain");
+
+          if (dragData.startsWith("task:")) {
+            const taskId = dragData.replace("task:", "");
+            assignTaskToDay(taskId, dateKey);
+            return;
+          }
+
+          if (dragData.startsWith("calendar:")) {
+            const itemId = dragData.replace("calendar:", "");
+            moveCalendarItem(itemId, dateKey);
+            return;
+          }
+
+          assignTaskToDay(dragData, dateKey);
         });
 
         dayEl.addEventListener("click", event => {
@@ -1000,6 +1040,11 @@
 
           if (selectedTaskId) {
             assignTaskToDay(selectedTaskId, dateKey);
+            return;
+          }
+
+          if (selectedCalendarItemId) {
+            moveCalendarItem(selectedCalendarItemId, dateKey);
           }
         });
 
@@ -1009,10 +1054,30 @@
         itemsForDay.forEach(item => {
           const itemEl = document.createElement("div");
           itemEl.className = `calendar-task ${item.person}`;
+          itemEl.draggable = true;
+          itemEl.dataset.calendarItemId = item.id;
+
+          if (item.id === selectedCalendarItemId) {
+            itemEl.classList.add("selected-move");
+          }
+
           itemEl.innerHTML = `
             ${escapeHtml(item.name)}
             <button title="Odebrat z kalendáře" type="button">×</button>
           `;
+
+          itemEl.addEventListener("dragstart", event => {
+            event.dataTransfer.setData("text/plain", `calendar:${item.id}`);
+          });
+
+          itemEl.addEventListener("click", event => {
+            if (event.target.closest("button")) {
+              return;
+            }
+
+            event.stopPropagation();
+            selectCalendarItem(item.id);
+          });
 
           const deleteCalendarBtn = itemEl.querySelector("button");
 
@@ -1035,7 +1100,22 @@
         return;
       }
 
+      selectedCalendarItemId = null;
       selectedTaskId = selectedTaskId === taskId ? null : taskId;
+
+      renderTaskList();
+      renderCalendar();
+    }
+
+    function selectCalendarItem(itemId) {
+      const item = calendarItems.find(calendarItem => calendarItem.id === itemId);
+
+      if (!item) {
+        return;
+      }
+
+      selectedTaskId = null;
+      selectedCalendarItemId = selectedCalendarItemId === itemId ? null : itemId;
 
       renderTaskList();
       renderCalendar();
@@ -1095,6 +1175,8 @@
       if (selectedTaskId === taskId) {
         selectedTaskId = null;
       }
+
+      selectedCalendarItemId = null;
 
       saveData();
       renderTaskList();
@@ -1185,11 +1267,30 @@
       renderCalendar();
     }
 
+    function moveCalendarItem(itemId, newDateKey) {
+      const item = calendarItems.find(calendarItem => calendarItem.id === itemId);
+
+      if (!item) {
+        return;
+      }
+
+      item.date = newDateKey;
+      selectedCalendarItemId = null;
+
+      saveData();
+      renderTaskList();
+      renderCalendar();
+    }
+
     function removeCalendarItem(itemId) {
       const item = calendarItems.find(calendarItem => calendarItem.id === itemId);
 
       if (!item) {
         return;
+      }
+
+      if (selectedCalendarItemId === itemId) {
+        selectedCalendarItemId = null;
       }
 
       calendarItems = calendarItems.filter(calendarItem => calendarItem.id !== itemId);
@@ -1247,6 +1348,7 @@
       tasks = [];
       calendarItems = [];
       selectedTaskId = null;
+      selectedCalendarItemId = null;
 
       saveData();
       renderTaskList();
